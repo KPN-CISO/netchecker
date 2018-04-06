@@ -4,7 +4,14 @@
   
 Netchecker lets you offline-check a list of IP addresses and CIDRs against known AS numbers/names. Works with both IPv4 and IPv6! This tool is useful for checking of e.g. leaked/dumped IPs/CIDRs against ASNs to see if there are matches, without having to use internet sources and thereby risking the possibility of announcing your interest in the checked addresses/ranges.
   
-Netchecker automatically groks the entirety of any text file for anything resembling an IPv4 or IPv6 address or CIDR-notation, and will determine if any of those belong to one of the AS numbers/names you specified. The output shows the IP/CIDR found and which exact subnet it belongs to - useful for helping to determine the ownership for delegated prefixes.
+Netchecker automatically parses the entirety of any text file (unstructured or not) for anything resembling an IPv4 address, IPv6 address or a CIDR-netblock, and will determine if any of those belong to one of the AS numbers/names you specified as keyword searches. The output will show
+
+1) which IPs/CIDRs were found in which ASNs
+2) to which exact subnet the IPs/CIDRs belong (useful for helping to determine the ownership for delegated prefixes)
+3) how many IPs/CIDRs were found in the source file
+4) how many of the IPs/CIDRs found in the source file were discovered in the searched ASNs
+5) how many of the IPs/CIDRs found in the source file were NOT discovered in the searched ASNs
+6) which of the found IPs/CIDRs from the source file were NOT discovered in the searched ASNs
 
 # Requirements  
   
