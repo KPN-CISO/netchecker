@@ -328,9 +328,10 @@ def CheckIPs(options,ASNs):
 	if options.verbose:
 		if len(matchset) < len(addresslist):
 			print("I) Found " + str(len(matchset)) + " IPs in the specified ASN search string: \"" + ASN + "\" out of " + str(len(addresslist)) + " total IP addresses.")
-			print("I) These IP addresses were not matched:")
+			print("I) These IP addresses were not matched: ")
 			for ip in addresslist.difference(matchset):
-				print("I) " + ip[1] + "/" + ip[2])
+				sys.stdout.write(ip[1] + "/" + ip[2] + " ")
+			sys.stdout.flush()
 		else:
 			print("I) Found all " + str(len(matchset)) + " IPs in the specified ASNs: " + ASN)
 
