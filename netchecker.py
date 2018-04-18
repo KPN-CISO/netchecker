@@ -328,10 +328,12 @@ def CheckIPs(options,ASNs):
 	if options.verbose:
 		if len(matchset) < len(addresslist):
 			print("I) Found " + str(len(matchset)) + " IPs in the specified ASN search string: \"" + ASN + "\" out of " + str(len(addresslist)) + " total IP addresses.")
-			print("I) These IP addresses were not matched: ")
-			for ip in addresslist.difference(matchset):
-				sys.stdout.write(ip[1] + "/" + ip[2] + " ")
-			sys.stdout.flush()
+			if options.notfound:
+				sys.stdout.write("I) These addresses were not matched: ")
+				for ip in addresslist.difference(matchset):
+					sys.stdout.write(ip[1] + "/" + ip[2] + " ")
+				sys.stdout.write('\n')
+				sys.stdout.flush()
 		else:
 			print("I) Found all " + str(len(matchset)) + " IPs in the specified ASNs: " + ASN)
 
@@ -342,6 +344,7 @@ if __name__=="__main__":
 	cli.add_option('-q','--quiet',dest='verbose',action='store_false',default=True,help='[optional] Do not print progress, errors (quiet operation), CSV output format')
 	cli.add_option('-u','--update',dest='update',action='store_true',default=False,help='[optional] Update and build the GeoLite ASN cache (requires an internet connection)')
 	cli.add_option('-b','--build',dest='build',action='store_true',default=False,help='[optional] Build the GeoLite ASN cache (use if you downloaded the MaxMind files manually')
+	cli.add_option('-n','--notfound',dest='notfound',action='store_true',default=False,help='[optional] Display the list of addresses that were not matched against the given ASNs')
 	(options,ASNs)=cli.parse_args()
 	if options.update:
 		UpdateGeoIP(options)
