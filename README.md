@@ -16,7 +16,7 @@ Netchecker automatically parses the entirety of any text file (unstructured or n
 # Requirements  
   
 1) Python 3.x (sorry, Python 2.x is no longer supported due to the need for the ipaddress module/features)
-2) [required] MaxMind's GeoLite ASN databases: http://dev.maxmind.com/geoip/legacy/geolite/ (auto-download possible)
+2) [required] MaxMind's GeoLite ASN databases: https://geolite.maxmind.com/download/geoip/database/ (auto-download possible)
   
 # Installation  
   
