@@ -20,7 +20,7 @@ Netchecker automatically parses the entirety of any text file (unstructured or n
   
 # Installation  
   
-1) git clone https://github.com/uforia/netchecker.git
+1) git clone https://github.com/KPN-CISO/netchecker/
 
 # Usage  
   
