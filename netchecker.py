@@ -272,9 +272,9 @@ def CheckIPs(options,ASNs):
     except KeyboardInterrupt:
         print("E) CTRL-C pressed, stopping!")
         sys.exit(1)
-#    except:
-#        print("E) An error occurred reading the cache from disk!")
-#        sys.exit(1)
+    except:
+        print("E) An error occurred reading the cache from disk!")
+        sys.exit(1)
     if options.verbose:
         print("I) Loaded GeoLite ASN caches!")
         print("I) Checking the list of IPs")
