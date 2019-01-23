@@ -25,6 +25,7 @@ import os
 import ipaddress
 import pickle
 import itertools
+import bisect
 
 ### Python 2/3 compatibility (urllib2 and ipaddr no longer exist in Python 3.x)
 try:
@@ -106,18 +107,10 @@ def BuildCache(options):
     try:
         if GeoIPv4:
             with open(GeoIPv4,'rt',encoding='iso8859-1') as f:
-                IPv4ASNs=tuple(csv.reader(f))
+                IPv4ASNs=tuple(csv.DictReader(f))
         if GeoIPv6:
             with open(GeoIPv6,'rt',encoding='iso8859-1') as f:
-                IPv6ASNs=tuple(csv.reader(f))
-    except TypeError:
-        ### Python 2.7 compatibility
-        if GeoIPv4:
-            with open(GeoIPv4,'rt') as f:
-                IPv4ASNs=tuple(csv.reader(f))
-        if GeoIPv6:
-            with open(GeoIPv6,'rt') as f:
-                IPv6ASNs=tuple(csv.reader(f))
+                IPv6ASNs=tuple(csv.DictReader(f))
     except IOError:
         print("E) Error opening/reading ASN file(s): "+GeoIPv4+" or "+GeoIPv6+" - try running with -u (update) option")
         sys.exit(1)
@@ -126,20 +119,21 @@ def BuildCache(options):
         sys.exit(1)
     ASnumdict={}
     ASnamedict={}
-    Netblockdict={}
+    net4_records = []
+    net4_ranges = []
+    net6_records = []
+    net6_ranges = []
     if options.verbose:
         print("U) Building cache, this will take a while")
         ipv4count,ipv6count=0,0
-    for line in IPv4ASNs:
+    for record in IPv4ASNs:
         try:
-            netblock,ASnum,ASname=line
-            if netblock == 'network' and ASnum == 'autonomous_system_number' and ASname == 'autonomous_system_organization':
-                continue
+            netblock, ASnum, ASname = record['network'], record['autonomous_system_number'], record['autonomous_system_organization']
         except KeyboardInterrupt:
             print("E) CTRL-C pressed, stopping!")
             sys.exit(1)
         except:
-            print("E) An error occurred parsing the IPv4ASN: "+line)
+            print("E) An error occurred parsing the IPv4ASN: "+record)
             continue
         if options.verbose:
             ipv4count+=1
@@ -156,17 +150,25 @@ def BuildCache(options):
         else:
             ASnumdict[ASnum]=list()
             ASnumdict[ASnum].append(netblock)
-        Netblockdict[netblock] = (ASnum,ASname)
-    for line in IPv6ASNs:
+        net4 = ipaddress.IPv4Network(netblock)
+        net4_records.append(record)
+        min_addr = net4.network_address
+        max_addr = min_addr + net4.num_addresses
+        net4_ranges.extend([min_addr.packed, max_addr.packed])
+    for i in range(len(net4_ranges)-1):
+        assert net4_ranges[i] <= net4_ranges[i+1]
+    if options.verbose:
+        sys.stdout.write('\n')
+        sys.stdout.flush()
+        print("IPv4: " + str(len(net4_records)) + " records / " + str(len(net4_ranges)) + " ranges!")
+    for record in IPv6ASNs:
         try:
-            netblock,ASnum,ASname=line
-            if netblock == 'network' and ASnum == 'autonomous_system_number' and ASname == 'autonomous_system_organization':
-                continue
+            netblock, ASnum, ASname = record['network'], record['autonomous_system_number'], record['autonomous_system_organization']
         except KeyboardInterrupt:
             print("E) CTRL-C pressed, stopping!")
             sys.exit(1)
         except:
-            print("E) An error occurred parsing the IPv6ASN: "+IPv6ASN)
+            print("E) An error occurred parsing the IPv6ASN: "+record)
             continue
         if options.verbose:
             ipv6count+=1
@@ -183,17 +185,24 @@ def BuildCache(options):
         else:
             ASnumdict[ASnum]=list()
             ASnumdict[ASnum].append(netblock)
-        Netblockdict[netblock] = (ASname,ASnum)
+        net6 = ipaddress.IPv6Network(netblock)
+        net6_records.append(record)
+        min_addr = net6.network_address
+        max_addr = min_addr + net6.num_addresses
+        net6_ranges.extend([min_addr.packed, max_addr.packed])
+    for i in range(len(net6_ranges)-1):
+        assert net6_ranges[i] <= net6_ranges[i+1]
     if options.verbose:
-        sys.stdout.write('done!\n')
+        sys.stdout.write('\n')
         sys.stdout.flush()
+        print("IPv6: " + str(len(net6_records)) + " records / " + str(len(net6_ranges)) + " ranges!")
     try:
         with open(ASnumCache,'wb') as f:
             pickle.dump(ASnumdict,f)
         with open(ASnameCache,'wb') as f:
             pickle.dump(ASnamedict,f)
         with open(NetblockCache,'wb') as f:
-            pickle.dump(Netblockdict,f)
+            pickle.dump((net4_records, net4_ranges, net6_records, net6_ranges), f)
     except KeyboardInterrupt:
         print("E) CTRL-C pressed, stopping!")
         sys.exit(1)
@@ -242,15 +251,21 @@ def CheckIPs(options,ASNs):
     except KeyboardInterrupt:
         print("E) CTRL-C pressed, stopping!")
         sys.exit(1)
-    if options.verbose:
-        print("I) Reading GeoLite ASN caches: " + ASnameCache + ", " + ASnumCache + " and " + NetblockCache + "...")
     try:
-        with open(ASnameCache, 'rb') as f:
-            ASnameCacheFile = pickle.load(f)
-        with open(ASnumCache, 'rb') as f:
-            ASnumCacheFile = pickle.load(f)
-        with open(NetblockCache, 'rb') as f:
-            NetblockCacheFile = pickle.load(f)
+        ASN = '|'.join(ASNs)
+        prog = re.compile(ASN,re.IGNORECASE)
+        if ASN == '':
+            if options.verbose:
+                print("I) Reading GeoLite ASN cache: " + NetblockCache + "...")
+            with open(NetblockCache, 'rb') as f:
+                net4_records, net4_ranges, net6_records, net6_ranges = pickle.load(f)
+        else:
+            if options.verbose:
+                print("I) Reading GeoLite ASN caches: " + ASnameCache + " and " + ASnumCache + "...")
+            with open(ASnameCache, 'rb') as f:
+                ASnameCacheFile = pickle.load(f)
+            with open(ASnumCache, 'rb') as f:
+                ASnumCacheFile = pickle.load(f)
     except FileNotFoundError:
         print("E) Not all GeoLite ASN caches were found; perhaps you need to update (-u) first?")
         sys.exit(1)
@@ -269,8 +284,6 @@ def CheckIPs(options,ASNs):
     if options.verbose:
         ipcount=0
         hits=0
-    ASN = '|'.join(ASNs)
-    prog = re.compile(ASN,re.IGNORECASE)
     matchset = set()
     if ASN == '':
         ASN = 'all ASNs'
@@ -282,20 +295,42 @@ def CheckIPs(options,ASNs):
         for address in addresslist:
             if options.verbose:
                 ipcount += 1
-            for netblock in NetblockCacheFile.keys():
-                if ipaddress.ip_network(address)._version == ipaddress.ip_network(netblock)._version:
-                    if subnet_of(ipaddress.ip_network(address), (ipaddress.ip_network(netblock))):
-                        ASnum, ASname = NetblockCacheFile[netblock]
-                        matchset.add((ASname, address, netblock))
-                        if ASname in ASblocks:
-                            ASblocks[ASname].append(address)
-                        else:
-                            ASblocks[ASname] = list()
-                            ASblocks[ASname].append(address)
-                        if options.verbose:
-                            hits += 1
-                        else:
-                            print("\"" + address + "\",\"" + netblock + "\",\"" + ASname + "\"")
+            if '/' in address:
+                ip = ipaddress.ip_address(address.split('/')[0])
+            else:
+                ip = ipaddress.ip_address(address)
+            ip = ipaddress.IPv4Address(ip)
+            if ip.version == 4:
+                net_idx = bisect.bisect(net4_ranges, ip.packed)
+                net_record = net4_records[net_idx//2]
+                net, ASnum, ASname = ipaddress.IPv4Network(net_record['network']), net_record['autonomous_system_number'], net_record['autonomous_system_organization']
+                if ip in net:
+                    matchset.add(address)
+                    if ASname in ASblocks:
+                        ASblocks[ASname].append(address)
+                    else:
+                        ASblocks[ASname] = list()
+                        ASblocks[ASname].append(address)
+                    if options.verbose:
+                        hits += 1
+                    else:
+                        print("\"" + str(ip) + "\",\"" + str(net) + "\",\"" + ASname + "\"")
+            elif ip.version == 6:
+                ip = ipaddress.IPv6Address(address)
+                net_idx = bisect.bisect(net6_ranges, ip.packed)
+                net_record = net6_records[net_idx//2]
+                net, ASnum, ASname = ipaddress.IPv4Network(net_record['network']), net_record['autonomous_system_number'], net_record['autonomous_system_organization']
+                if ip in net:
+                    matchset.add(address)
+                    if ASname in ASblocks:
+                        ASblocks[ASname].append(address)
+                    else:
+                        ASblocks[ASname] = list()
+                        ASblocks[ASname].append(address)
+                    if options.verbose:
+                        hits += 1
+                    else:
+                        print("\"" + str(ip) + "\",\"" + str(net) + "\",\"" + ASname + "\"")
     else:
         # First, build a list of the requested ASNs and their netblocks
         netblocks = dict()
