@@ -26,6 +26,7 @@ Netchecker automatically parses the entirety of any text file (unstructured or n
   
 1) For your first run, create the GeoCache db first by running netchecker with the -u option.
 2) Run netchecker over any text-based file containing IPv4 and/or IPv6 addresses/CIDRs, and specify the ASNs to look for or use the '-a' option to list all IP <-> ASN relationships:
+
    ./netchecker.py -f \<ip-file\> \<ASname\> \<ASname\> \<ASnumber...\> ... etc.
 
 Usage notes:
