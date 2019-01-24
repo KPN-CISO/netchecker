@@ -7,10 +7,10 @@ __pycache__/
 *.so
 
 # Distribution / packaging
-GeoCache.db
-GeoIPASNum2.csv
-GeoIPASNum2v6.csv
+*.csv
+*.db
 .Python
+.gitignore
 env/
 build/
 develop-eggs/
