@@ -58,9 +58,6 @@ def UpdateGeoIP(options):
     except KeyboardInterrupt:
         print("E) CTRL-C pressed, stopping!")
         sys.exit(1)
-    except:
-        print("E) An error occurred downloading " + GeoIPURL + GeoIPURLzip)
-        sys.exit(1)
     try:
         with open(GeoIPURLzip, 'wb') as f:
             f.write(response.read())
@@ -129,7 +126,7 @@ def BuildCache(options):
         except KeyboardInterrupt:
             print("E) CTRL-C pressed, stopping!")
             sys.exit(1)
-        except:
+        except ValueError:
             print("E) An error occurred parsing the IPv4ASN: "+record)
             continue
         if options.verbose:
@@ -167,7 +164,7 @@ def BuildCache(options):
         except KeyboardInterrupt:
             print("E) CTRL-C pressed, stopping!")
             sys.exit(1)
-        except:
+        except ValueError:
             print("E) An error occurred parsing the IPv6ASN: "+record)
             continue
         if options.verbose:
@@ -210,7 +207,7 @@ def BuildCache(options):
     except KeyboardInterrupt:
         print("E) CTRL-C pressed, stopping!")
         sys.exit(1)
-    except:
+    except IOError:
         print("E) An error occurred writing the cache to disk!")
         sys.exit(1)
         print("U) Successfully built the GeoLite ASN cache: " +
@@ -329,7 +326,7 @@ def CheckIPs(options, ASNs):
     except KeyboardInterrupt:
         print("E) CTRL-C pressed, stopping!")
         sys.exit(1)
-    except:
+    except IOError:
         print("E) An error occurred reading the cache from disk!")
         sys.exit(1)
     if options.verbose:
