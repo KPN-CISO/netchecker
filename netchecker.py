@@ -121,7 +121,7 @@ def BuildCache(options):
     for record in IPv4ASNs:
         try:
             netblock = record['network']
-            ASnum = record['autonomous_system_number'],
+            ASnum = record['autonomous_system_number']
             ASname = record['autonomous_system_organization']
         except KeyboardInterrupt:
             print("E) CTRL-C pressed, stopping!")
@@ -134,12 +134,12 @@ def BuildCache(options):
             if (ipv4count % 500) == 0:
                 sys.stdout.write('.')
                 sys.stdout.flush()
-        if ASname in ASnamedict:
+        if ASname in ASnamedict.keys():
             ASnamedict[ASname].append(netblock)
         else:
             ASnamedict[ASname] = list()
             ASnamedict[ASname].append(netblock)
-        if ASnum in ASnumdict:
+        if ASnum in ASnumdict.keys():
             ASnumdict[ASnum].append(netblock)
         else:
             ASnumdict[ASnum] = list()
@@ -159,7 +159,7 @@ def BuildCache(options):
     for record in IPv6ASNs:
         try:
             netblock = record['network']
-            ASnum = record['autonomous_system_number'],
+            ASnum = record['autonomous_system_number']
             ASname = record['autonomous_system_organization']
         except KeyboardInterrupt:
             print("E) CTRL-C pressed, stopping!")
@@ -172,12 +172,12 @@ def BuildCache(options):
             if (ipv6count % 500 == 0):
                 sys.stdout.write('.')
                 sys.stdout.flush()
-        if ASname in ASnamedict:
+        if ASname in ASnamedict.keys():
             ASnamedict[ASname].append(netblock)
         else:
             ASnamedict[ASname] = list()
             ASnamedict[ASname].append(netblock)
-        if ASnum in ASnumdict:
+        if ASnum in ASnumdict.keys():
             ASnumdict[ASnum].append(netblock)
         else:
             ASnumdict[ASnum] = list()
