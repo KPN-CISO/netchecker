@@ -28,6 +28,23 @@ ASnameCache = 'ASnameCache.db'
 NetblockCache = 'NetblockCache.db'
 
 
+def _is_subnet_of(a, b):
+    try:
+        # Always false if one is v4 and the other is v6.
+        if a._version != b._version:
+            raise TypeError("{a} and {b} are not of the same version")
+        return (b.network_address <= a.network_address and
+                b.broadcast_address >= a.broadcast_address)
+    except AttributeError:
+        raise TypeError("Unable to test subnet containment "
+                        "between {a} and {b}")
+
+
+def subnet_of(a, b):
+    """Return True if this network is a subnet of other."""
+    return _is_subnet_of(a, b)
+
+
 def UpdateGeoIP(options):
     """
     Download the GeoLite IP databases from MaxMind and unpack them into
@@ -290,7 +307,6 @@ def CheckIPs(options, ASNs):
         sys.exit(1)
     try:
         ASN = '|'.join(ASNs)
-        prog = re.compile(ASN, re.IGNORECASE)
         if ASN == '':
             if options.verbose:
                 print("I) Reading GeoLite ASN cache: " + NetblockCache +
@@ -321,7 +337,6 @@ def CheckIPs(options, ASNs):
         print("I) Checking the list of IPs")
     else:
         print("\"IP\",\"Network\",\"ASname\"")
-    output = ""
     if options.verbose:
         ipcount = 0
         hits = 0
@@ -346,7 +361,6 @@ def CheckIPs(options, ASNs):
                 net_idx = bisect.bisect(net4_ranges, ip.packed)
                 net_record = net4_records[net_idx//2]
                 net = ipaddress.IPv4Network(net_record['network'])
-                ASnum = net_record['autonomous_system_number'],
                 ASname = net_record['autonomous_system_organization']
                 if ip in net:
                     matchset.add(address)
@@ -365,7 +379,6 @@ def CheckIPs(options, ASNs):
                 net_idx = bisect.bisect(net6_ranges, ip.packed)
                 net_record = net6_records[net_idx//2]
                 net = ipaddress.IPv6Network(net_record['network'])
-                ASnum = net_record['autonomous_system_number'],
                 ASname = net_record['autonomous_system_organization']
                 if ip in net:
                     matchset.add(address)
