@@ -348,6 +348,8 @@ def CheckIPs(options, ASNs):
         ASblocks = dict()
         for address in addresslist:
             if options.verbose:
+                sys.stdout.write('.')
+                sys.stdout.flush()
                 ipcount += 1
             if '/' in address:
                 ip = ipaddress.ip_address(address.split('/')[0])
@@ -356,7 +358,10 @@ def CheckIPs(options, ASNs):
             if ip.version == 4:
                 ip = ipaddress.IPv4Address(ip)
                 net_idx = bisect.bisect(net4_ranges, ip.packed)
-                net_record = net4_records[net_idx//2]
+                try:
+                    net_record = net4_records[net_idx//2]
+                except IndexError:
+                    sys.stdout.write('x')
                 net = ipaddress.IPv4Network(net_record['network'])
                 ASname = net_record['autonomous_system_organization']
                 if ip in net:
@@ -374,7 +379,10 @@ def CheckIPs(options, ASNs):
             elif ip.version == 6:
                 ip = ipaddress.IPv6Address(address)
                 net_idx = bisect.bisect(net6_ranges, ip.packed)
-                net_record = net6_records[net_idx//2]
+                try:
+                    net_record = net4_records[net_idx//2]
+                except IndexError:
+                    sys.stdout.write('x')
                 net = ipaddress.IPv6Network(net_record['network'])
                 ASname = net_record['autonomous_system_organization']
                 if ip in net:
@@ -389,6 +397,9 @@ def CheckIPs(options, ASNs):
                     else:
                         print("\"" + str(ip) + "\",\"" +
                               str(net) + "\",\"" + ASname + "\"")
+        if options.verbose:
+            sys.stdout.write('\n')
+            sys.stdout.flush()
     else:
         # First, build a list of the requested ASNs and their netblocks
         netblocks = dict()
