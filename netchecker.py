@@ -364,6 +364,7 @@ def CheckIPs(options, ASNs):
                     sys.stdout.write('x')
                 net = ipaddress.IPv4Network(net_record['network'])
                 ASname = net_record['autonomous_system_organization']
+                ASnum = net_record['autonomous_system_number']
                 if ip in net:
                     matchset.add(address)
                     if ASname in ASblocks:
@@ -375,7 +376,8 @@ def CheckIPs(options, ASNs):
                         hits += 1
                     else:
                         print("\"" + str(ip) + "\",\"" +
-                              str(net) + "\",\"" + ASname + "\"")
+                              str(net) + "\",\"" + ASname + "\",\"AS" +
+                              ASnum + "\"")
             elif ip.version == 6:
                 ip = ipaddress.IPv6Address(address)
                 net_idx = bisect.bisect(net6_ranges, ip.packed)
@@ -385,6 +387,7 @@ def CheckIPs(options, ASNs):
                     sys.stdout.write('x')
                 net = ipaddress.IPv6Network(net_record['network'])
                 ASname = net_record['autonomous_system_organization']
+                ASnum = net_record['autonomous_system_number']
                 if ip in net:
                     matchset.add(address)
                     if ASname in ASblocks:
@@ -396,7 +399,8 @@ def CheckIPs(options, ASNs):
                         hits += 1
                     else:
                         print("\"" + str(ip) + "\",\"" +
-                              str(net) + "\",\"" + ASname + "\"")
+                              str(net) + "\",\"" + ASname + "\",\"AS" +
+                              ASnum + "\"")
         if options.verbose:
             sys.stdout.write('\n')
             sys.stdout.flush()
